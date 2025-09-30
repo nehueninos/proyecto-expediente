@@ -7,6 +7,7 @@ import { SearchBar } from './components/SearchBar';
 import { ExpedienteCard } from './components/ExpedienteCard';
 import { NewExpedienteForm } from './components/NewExpedienteForm';
 import { ExpedienteHistory } from './components/ExpedienteHistory';
+import { TransferNotifications } from './components/TransferNotifications';
 import apiService from './services/api';
 
 function App() {
@@ -14,17 +15,21 @@ function App() {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [showNewForm, setShowNewForm] = useState(false);
   const [selectedExpediente, setSelectedExpediente] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedArea, setSelectedArea] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
-  // Cargar expedientes cuando el usuario esté autenticado
   useEffect(() => {
     if (user) {
       loadExpedientes();
+      loadNotificationCount();
+      const interval = setInterval(loadNotificationCount, 30000);
+      return () => clearInterval(interval);
     }
   }, [user, searchTerm, selectedArea, selectedStatus]);
 
@@ -47,6 +52,15 @@ function App() {
     }
   };
 
+  const loadNotificationCount = async () => {
+    try {
+      const notifications = await apiService.getTransferNotifications();
+      setNotificationCount(notifications.length);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
   const handleLogin = (userData) => {
     setUser(userData);
   };
@@ -60,22 +74,15 @@ function App() {
   const handleNewExpediente = async (expedienteData) => {
     try {
       await apiService.createExpediente(expedienteData);
-      await loadExpedientes(); // Recargar la lista
+      await loadExpedientes();
     } catch (error) {
       throw new Error('Error al crear expediente: ' + error.message);
     }
   };
 
-  const handleTransfer = async (expedienteId, areaDestino, observaciones) => {
-    try {
-      await apiService.transferExpediente(expedienteId, {
-        areaDestino,
-        observaciones,
-      });
-      await loadExpedientes(); // Recargar la lista
-    } catch (error) {
-      throw new Error('Error al transferir expediente: ' + error.message);
-    }
+  const handleTransferUpdate = async () => {
+    await loadExpedientes();
+    await loadNotificationCount();
   };
 
   if (!user) {
@@ -84,8 +91,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} onLogout={handleLogout} />
-      
+      <Header
+        user={user}
+        onLogout={handleLogout}
+        notificationCount={notificationCount}
+        onNotificationClick={() => setShowNotifications(true)}
+      />
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
@@ -159,7 +171,7 @@ function App() {
                 key={expediente._id}
                 expediente={expediente}
                 user={user}
-                onTransfer={handleTransfer}
+                onTransfer={handleTransferUpdate}
                 onViewHistory={setSelectedExpediente}
               />
             ))}
@@ -179,6 +191,13 @@ function App() {
         <ExpedienteHistory
           expediente={selectedExpediente}
           onClose={() => setSelectedExpediente(null)}
+        />
+      )}
+
+      {showNotifications && (
+        <TransferNotifications
+          onClose={() => setShowNotifications(false)}
+          onUpdate={handleTransferUpdate}
         />
       )}
     </div>

@@ -1,8 +1,8 @@
 import React from 'react';
-import { LogOut, User as UserIcon, FileText } from 'lucide-react';
+import { LogOut, User as UserIcon, FileText, Bell } from 'lucide-react';
 import { AREAS } from '../utils/constants';
 
-export function Header({ user, onLogout }) {
+export function Header({ user, onLogout, notificationCount, onNotificationClick }) {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,6 +18,17 @@ export function Header({ user, onLogout }) {
           </div>
 
           <div className="flex items-center space-x-4">
+            <button
+              onClick={onNotificationClick}
+              className="relative flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
+            </button>
             <div className="flex items-center space-x-2 text-gray-700">
               <UserIcon className="w-5 h-5" />
               <span className="font-medium">{user.name}</span>
