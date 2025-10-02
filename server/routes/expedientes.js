@@ -37,6 +37,7 @@ router.get('/', auth, async (req, res) => {
       area: exp.area,
       estado: exp.estado,
       prioridad: exp.prioridad,
+      articulo: exp.articulo,
       user: exp.userId,
       creator: exp.createdBy,
       created_at: exp.createdAt,
@@ -51,11 +52,15 @@ router.get('/', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { numero, titulo, descripcion, estado, prioridad } = req.body;
+    const { numero, titulo, descripcion, estado, prioridad, articulo } = req.body;
 
     const existingExpediente = await Expediente.findOne({ numero });
     if (existingExpediente) {
       return res.status(400).json({ message: 'El número de expediente ya existe' });
+    }
+
+    if (!articulo) {
+      return res.status(400).json({ message: 'El artículo de la Ley 24.240 es requerido' });
     }
 
     const expediente = new Expediente({
@@ -65,6 +70,7 @@ router.post('/', auth, async (req, res) => {
       area: req.user.area,
       estado: estado || 'pendiente',
       prioridad: prioridad || 'media',
+      articulo,
       userId: req.user._id,
       createdBy: req.user._id
     });

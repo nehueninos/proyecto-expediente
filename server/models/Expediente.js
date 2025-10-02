@@ -31,6 +31,11 @@ const expedienteSchema = new mongoose.Schema({
     default: 'media',
     enum: ['baja', 'media', 'alta']
   },
+  articulo: {
+    type: String,
+    required: true,
+    enum: ['1', '2', '3', '4', '5', '6']
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

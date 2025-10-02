@@ -93,6 +93,11 @@ export function ExpedienteCard({ expediente, user, onTransfer, onViewHistory }) 
             <div>
               <h3 className="text-lg font-semibold text-gray-900">{expediente.titulo}</h3>
               <p className="text-sm text-gray-600">Nº {expediente.numero}</p>
+              {expediente.articulo && (
+                <p className="text-xs text-blue-600 font-medium mt-1">
+                  Art. {expediente.articulo} Ley 24.240
+                </p>
+              )}
             </div>
           </div>
           <div className="flex flex-col items-end space-y-2">

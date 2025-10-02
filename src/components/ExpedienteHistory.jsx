@@ -77,6 +77,12 @@ export function ExpedienteHistory({ expediente, onClose }) {
                     {AREAS[expediente.area]}
                   </span>
                 </div>
+                {expediente.articulo && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Artículo Ley 24.240:</span>
+                    <span className="ml-2 text-sm text-blue-600 font-semibold">Artículo {expediente.articulo}</span>
+                  </div>
+                )}
                 <div>
                   <span className="text-sm font-medium text-gray-700">Estado:</span>
                   <span className="ml-2 text-sm text-gray-600">{getStatusLabel(expediente.estado)}</span>
