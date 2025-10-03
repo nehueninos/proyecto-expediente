@@ -9,18 +9,37 @@ router.get('/', auth, async (req, res) => {
   try {
     const { search, estado } = req.query;
 
-    const query = { area: req.user.area };
+    let query = {};
+
+    if (req.user.role !== 'admin' && req.user.area !== 'mesa_entrada') {
+      query.area = req.user.area;
+    }
 
     if (search) {
-      query.$or = [
+      const searchConditions = [
         { numero: { $regex: search, $options: 'i' } },
         { titulo: { $regex: search, $options: 'i' } },
         { descripcion: { $regex: search, $options: 'i' } }
       ];
+
+      if (Object.keys(query).length > 0) {
+        query = {
+          $and: [
+            query,
+            { $or: searchConditions }
+          ]
+        };
+      } else {
+        query.$or = searchConditions;
+      }
     }
 
     if (estado && estado !== 'all') {
-      query.estado = estado;
+      if (query.$and) {
+        query.$and.push({ estado });
+      } else {
+        query.estado = estado;
+      }
     }
 
     const expedientes = await Expediente.find(query)

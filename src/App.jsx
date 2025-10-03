@@ -8,6 +8,7 @@ import { ExpedienteCard } from './components/ExpedienteCard';
 import { NewExpedienteForm } from './components/NewExpedienteForm';
 import { ExpedienteHistory } from './components/ExpedienteHistory';
 import { TransferNotifications } from './components/TransferNotifications';
+import { PendingTransfersModal } from './components/PendingTransfersModal';
 import apiService from './services/api';
 
 function App() {
@@ -23,15 +24,32 @@ function App() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [hasCheckedNotifications, setHasCheckedNotifications] = useState(false);
 
   useEffect(() => {
     if (user) {
       loadExpedientes();
-      loadNotificationCount();
+      checkInitialNotifications();
       const interval = setInterval(loadNotificationCount, 30000);
       return () => clearInterval(interval);
     }
   }, [user, searchTerm, selectedArea, selectedStatus]);
+
+  const checkInitialNotifications = async () => {
+    if (!hasCheckedNotifications) {
+      try {
+        const notifications = await apiService.getTransferNotifications();
+        setNotificationCount(notifications.length);
+        if (notifications.length > 0) {
+          setShowPendingModal(true);
+        }
+        setHasCheckedNotifications(true);
+      } catch (error) {
+        console.error('Error checking notifications:', error);
+      }
+    }
+  };
 
   const loadExpedientes = async () => {
     setLoading(true);
@@ -63,6 +81,7 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData);
+    setHasCheckedNotifications(false);
   };
 
   const handleLogout = () => {
@@ -198,6 +217,14 @@ function App() {
         <TransferNotifications
           onClose={() => setShowNotifications(false)}
           onUpdate={handleTransferUpdate}
+        />
+      )}
+
+      {showPendingModal && (
+        <PendingTransfersModal
+          count={notificationCount}
+          onClose={() => setShowPendingModal(false)}
+          onViewNotifications={() => setShowNotifications(true)}
         />
       )}
     </div>
