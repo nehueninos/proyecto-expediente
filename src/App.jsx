@@ -153,48 +153,66 @@ function App() {
           </div>
         )}
 
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="ml-3 text-gray-600">Cargando expedientes...</span>
-          </div>
-        ) : expedientes.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-12 h-12 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm || selectedArea !== 'all' || selectedStatus !== 'all' 
-                ? 'No se encontraron resultados' 
-                : 'No hay expedientes'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || selectedArea !== 'all' || selectedStatus !== 'all'
-                ? 'Intenta ajustar los filtros de búsqueda.'
-                : 'Comienza creando tu primer expediente.'
-              }
-            </p>
-            {(!searchTerm && selectedArea === 'all' && selectedStatus === 'all') && (
-              <button
-                onClick={() => setShowNewForm(true)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Crear Primer Expediente
-              </button>
+        {currentView === 'all' && (
+          <>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="ml-3 text-gray-600">Cargando expedientes...</span>
+              </div>
+            ) : expedientes.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {searchTerm || selectedArea !== 'all' || selectedStatus !== 'all'
+                    ? 'No se encontraron resultados'
+                    : 'No hay expedientes'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm || selectedArea !== 'all' || selectedStatus !== 'all'
+                    ? 'Intenta ajustar los filtros de búsqueda.'
+                    : 'Comienza creando tu primer expediente.'
+                  }
+                </p>
+                {(!searchTerm && selectedArea === 'all' && selectedStatus === 'all') && (
+                  <button
+                    onClick={() => setShowNewForm(true)}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Crear Primer Expediente
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {expedientes.map(expediente => (
+                  <ExpedienteCard
+                    key={expediente._id}
+                    expediente={expediente}
+                    user={user}
+                    onTransfer={handleTransferUpdate}
+                    onViewHistory={setSelectedExpediente}
+                  />
+                ))}
+              </div>
             )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {expedientes.map(expediente => (
-              <ExpedienteCard
-                key={expediente._id}
-                expediente={expediente}
-                user={user}
-                onTransfer={handleTransferUpdate}
-                onViewHistory={setSelectedExpediente}
-              />
-            ))}
-          </div>
+          </>
+        )}
+
+        {currentView === 'my' && (
+          <MyExpedientesView
+            user={user}
+            onEdit={setEditingExpediente}
+          />
+        )}
+
+        {currentView === 'pending' && (
+          <PendingExpedientesView
+            user={user}
+            onEdit={setEditingExpediente}
+          />
         )}
       </main>
 
@@ -225,6 +243,15 @@ function App() {
           count={notificationCount}
           onClose={() => setShowPendingModal(false)}
           onViewNotifications={() => setShowNotifications(true)}
+        />
+      )}
+
+      {editingExpediente && (
+        <EditExpedienteModal
+          expediente={editingExpediente}
+          onSave={handleEditExpediente}
+          onClose={() => setEditingExpediente(null)}
+          loading={editLoading}
         />
       )}
     </div>
