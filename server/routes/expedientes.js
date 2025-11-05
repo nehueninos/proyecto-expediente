@@ -97,7 +97,7 @@ router.post('/', auth, async (req, res) => {
       estado: estado || 'pendiente',
       prioridad: prioridad || 'media',
       articulo,
-      userId: randomConciliador._id,
+      userId: req.user._id,
       createdBy: req.user._id
     });
 
@@ -115,22 +115,11 @@ router.post('/', auth, async (req, res) => {
       fromUserId: req.user._id,
       toUserId: randomConciliador._id,
       toArea: randomConciliador.area,
-      message: `Expediente asignado automáticamente al conciliador: ${randomConciliador.name}`,
-      status: 'accepted'
+      message: `Expediente asignado automáticamente: ${expediente.numero}`,
+      status: 'pending'
     });
 
     await notification.save();
-
-    const history = new ExpedienteHistory({
-      expedienteId: expediente._id,
-      fromArea: req.user.area,
-      toArea: randomConciliador.area,
-      fromUserId: req.user._id,
-      toUserId: randomConciliador._id,
-      observaciones: `Asignación automática a conciliador: ${randomConciliador.name}`
-    });
-
-    await history.save();
 
     res.status(201).json(populatedExpediente);
   } catch (error) {
