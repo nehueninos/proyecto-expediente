@@ -82,13 +82,6 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'El artículo de la Ley 24.240 es requerido' });
     }
 
-    const conciliadores = await User.find({ role: 'user' });
-    if (conciliadores.length === 0) {
-      return res.status(400).json({ message: 'No hay conciliadores disponibles' });
-    }
-
-    const randomConciliador = conciliadores[Math.floor(Math.random() * conciliadores.length)];
-
     const expediente = new Expediente({
       numero,
       titulo,
@@ -106,20 +99,6 @@ router.post('/', auth, async (req, res) => {
     const populatedExpediente = await Expediente.findById(expediente._id)
       .populate('userId', 'username name area')
       .populate('createdBy', 'username name');
-
-    const TransferNotification = require('../models/TransferNotification');
-    const ExpedienteHistory = require('../models/ExpedienteHistory');
-
-    const notification = new TransferNotification({
-      expedienteId: expediente._id,
-      fromUserId: req.user._id,
-      toUserId: randomConciliador._id,
-      toArea: randomConciliador.area,
-      message: `Expediente asignado automáticamente: ${expediente.numero}`,
-      status: 'pending'
-    });
-
-    await notification.save();
 
     res.status(201).json(populatedExpediente);
   } catch (error) {
