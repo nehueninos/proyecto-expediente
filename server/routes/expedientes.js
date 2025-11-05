@@ -82,6 +82,13 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'El artículo de la Ley 24.240 es requerido' });
     }
 
+    const conciliadores = await User.find({ role: 'user' });
+    if (conciliadores.length === 0) {
+      return res.status(400).json({ message: 'No hay conciliadores disponibles' });
+    }
+
+    const randomConciliador = conciliadores[Math.floor(Math.random() * conciliadores.length)];
+
     const expediente = new Expediente({
       numero,
       titulo,
@@ -90,7 +97,7 @@ router.post('/', auth, async (req, res) => {
       estado: estado || 'pendiente',
       prioridad: prioridad || 'media',
       articulo,
-      userId: req.user._id,
+      userId: randomConciliador._id,
       createdBy: req.user._id
     });
 
@@ -99,6 +106,31 @@ router.post('/', auth, async (req, res) => {
     const populatedExpediente = await Expediente.findById(expediente._id)
       .populate('userId', 'username name area')
       .populate('createdBy', 'username name');
+
+    const TransferNotification = require('../models/TransferNotification');
+    const ExpedienteHistory = require('../models/ExpedienteHistory');
+
+    const notification = new TransferNotification({
+      expedienteId: expediente._id,
+      fromUserId: req.user._id,
+      toUserId: randomConciliador._id,
+      toArea: randomConciliador.area,
+      message: `Expediente asignado automáticamente al conciliador: ${randomConciliador.name}`,
+      status: 'accepted'
+    });
+
+    await notification.save();
+
+    const history = new ExpedienteHistory({
+      expedienteId: expediente._id,
+      fromArea: req.user.area,
+      toArea: randomConciliador.area,
+      fromUserId: req.user._id,
+      toUserId: randomConciliador._id,
+      observaciones: `Asignación automática a conciliador: ${randomConciliador.name}`
+    });
+
+    await history.save();
 
     res.status(201).json(populatedExpediente);
   } catch (error) {
